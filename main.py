@@ -3,6 +3,8 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.v1.router import routes
+
 
 app = FastAPI(
     title="Fakestore API - FastAPI - IA", 
@@ -22,3 +24,5 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+app.include_router(routes)
