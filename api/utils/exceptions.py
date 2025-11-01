@@ -18,3 +18,9 @@ def exception_404_NOT_FOUND(detail: str) -> HTTPException:
         status_code=404,
         detail=detail,
     )
+
+def exception_500_INTERNAL_SERVER_ERROR(detail: str) -> HTTPException:
+    return HTTPException(
+        status_code=500,
+        detail=detail,
+    )

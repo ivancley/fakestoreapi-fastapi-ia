@@ -15,19 +15,19 @@ class CustomBaseModel(BaseModel):
     }
 
 
-class UsuarioBase(CustomBaseModel):
+class UserBase(CustomBaseModel):
     name: str
     email: str
 
 
-class UsuarioCreate(BaseModel): 
+class UserCreate(BaseModel): 
     name: str 
     email: str 
     password: str
     permissions: Optional[List[str]] = Field(default=get_permissions()[0])
 
 
-class UsuarioUpdate(BaseModel):
+class UserUpdate(BaseModel):
     id: UUID
     name: Optional[str] = None
     email: Optional[str] = None
@@ -44,7 +44,7 @@ class UsuarioUpdate(BaseModel):
         return self
 
 
-class UsuarioResponse(CustomBaseModel):
+class UserResponse(BaseModel):
     id: UUID 
     name: str
     email: str
@@ -53,8 +53,45 @@ class UsuarioResponse(CustomBaseModel):
     updated_at: datetime
 
 
-class UsuarioDelete(BaseModel):
+class UserDelete(BaseModel):
     id: UUID
     password: str
 
-    
+
+class AccountCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class AccountLogin(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    refresh_token: str
+    expires_in: int
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class RefreshTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    refresh_token: str
+
+
+class AccountResponse(BaseModel):
+    id: UUID
+    name: str
+    email: str
+    permissions: List[str]
+    created_at: datetime
+    updated_at: datetime
+

@@ -1,13 +1,15 @@
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
+from fastapi import APIRouter, Depends, Path, Query, Request
 from sqlalchemy.orm import Session
-from api.v1.user.use_case import UserUseCase
-from api.v1._shared.shemas import UsuarioResponse, UsuarioCreate, UsuarioUpdate, UsuarioDelete
-from api.v1._shared.models import User
-from fastapi import APIRouter, Depends, Query, Request, Path
-from api.utils.security import get_current_user
-from api.utils.db_services import get_db
+
 from api.utils.db_filter import parse_filter_params
+from api.utils.db_services import get_db
+from api.utils.security import get_current_user
+from api.v1._shared.models import User
+from api.v1._shared.schemas import UserCreate, UserDelete, UserResponse, UserUpdate
+from api.v1.user.use_case import UserUseCase
 
 
 router = APIRouter(
@@ -18,7 +20,7 @@ router = APIRouter(
 filter_fields = ["name", "email"]
 
 
-@router.get("", response_model=List[UsuarioResponse])
+@router.get("", response_model=List[UserResponse])
 async def list(
     request: Request,
     skip: int = Query(0, ge=0, description="Número de registros para pular"),
@@ -26,9 +28,9 @@ async def list(
     sort_by: Optional[str] = Query(None, description="Campo para ordenação"),
     sort_dir: str = Query("asc", regex="^(asc|desc)$", description="Direção da ordenação (asc ou desc)"),
     search: Optional[str] = Query(None, description="Busca textual nos campos padrões (name, email)"),
-    # current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> List[UsuarioResponse]:
+) -> List[UserResponse]:
     """
     Listar usuários
     
@@ -61,43 +63,44 @@ async def list(
     )
 
 
-@router.get("/{id}", response_model=UsuarioResponse)
+@router.get("/{id}", response_model=UserResponse)
 async def get_by_id(
     id: UUID = Path(..., description="ID do usuário"),
-    # current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> UsuarioResponse:
+) -> UserResponse:
     use_case = UserUseCase(db)
     return use_case.get(id)
 
-
-@router.post("", response_model=UsuarioResponse, status_code=201)
+"""
+@router.post("", response_model=UserResponse, status_code=201)
 async def create(
-    usuario: UsuarioCreate,
-    # current_user: User = Depends(get_current_user),
+    User: UserCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> UsuarioResponse:
+) -> UserResponse:
     use_case = UserUseCase(db)
-    return use_case.create(usuario)
+    return use_case.create(User)
+"""
 
 
-@router.put("", response_model=UsuarioResponse)
+@router.put("", response_model=UserResponse)
 async def update(
-    usuario: UsuarioUpdate,
-    # current_user: User = Depends(get_current_user),
+    User: UserUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> UsuarioResponse:
+) -> UserResponse:
     use_case = UserUseCase(db)
-    return use_case.update(usuario)
+    return use_case.update(User)
 
 
-@router.delete("", response_model=UsuarioResponse)
+@router.delete("", response_model=UserResponse)
 async def delete(
-    usuario: UsuarioDelete,
-    #current_user: User = Depends(get_current_user),
+    User: UserDelete,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
-) -> UsuarioResponse:
+) -> UserResponse:
     # Deleta um usuário validando senha
     
     use_case = UserUseCase(db)
-    return use_case.delete(usuario)
+    return use_case.delete(User)

@@ -1,14 +1,14 @@
-from api.v1._shared.shemas import UsuarioCreate, UsuarioUpdate, UsuarioDelete, UsuarioResponse
+from api.v1._shared.schemas import UserCreate, UserUpdate, UserDelete, UserResponse
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
 from api.v1.user.service import UserService
 from api.utils.db_filter import FilterCondition
 
-CreateType = UsuarioCreate
-UpdateType = UsuarioUpdate
-DeleteType = UsuarioDelete
-ResponseType = UsuarioResponse
+CreateType = UserCreate
+UpdateType = UserUpdate
+DeleteType = UserDelete
+ResponseType = UserResponse
 service = UserService
 
 class UserUseCase:

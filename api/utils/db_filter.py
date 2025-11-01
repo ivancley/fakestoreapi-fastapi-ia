@@ -9,7 +9,6 @@ from api.utils.exceptions import exception_400_BAD_REQUEST
 
 
 class FilterOperator(str, Enum):
-    # Operadores de comparação
     EQ = "eq"
     NE = "ne"
     CONTAINS = "contains"
@@ -123,7 +122,7 @@ def build_query_filter(
     model: Type[Any], 
     filter_fields: List[str]
 ):
-    """Constrói filtros a partir de lista de FilterCondition"""
+    """Constrói filtros a partir de lista de FilterCondition (case-insensitive)"""
     filters = []
     
     for condition in filter_conditions:
@@ -136,13 +135,13 @@ def build_query_filter(
         
         column = getattr(model, condition.campo)
         
-        # Aplicar operador
+        # Aplicar operador (todos são case-insensitive)
         if condition.operador == FilterOperator.CONTAINS.value:
             filters.append(column.ilike(f"%{condition.valor}%"))
         elif condition.operador == FilterOperator.EQ.value:
-            filters.append(column == condition.valor)
+            filters.append(column.ilike(condition.valor))
         elif condition.operador == FilterOperator.NE.value:
-            filters.append(column != condition.valor)
+            filters.append(~column.ilike(condition.valor))
     
     return and_(*filters) if filters else None
 

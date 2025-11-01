@@ -1,8 +1,9 @@
-from api.v1._shared.shemas import UsuarioCreate, UsuarioUpdate, UsuarioResponse, UsuarioDelete
+from api.v1._shared.schemas import UserCreate, UserUpdate, UserResponse, UserDelete
 from api.v1._shared.models import User
 from typing import List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from api.utils.db_filter import (
     validate_sort_field, 
     build_search_filter, 
@@ -14,10 +15,10 @@ from api.utils.exceptions import exception_404_NOT_FOUND, exception_400_BAD_REQU
 
 # Utilizo essa estratégia para gerar novos arquivos services 
 # trocando apenas o nome do arquivo e o objeto que será usado.
-CreateType = UsuarioCreate
-UpdateType = UsuarioUpdate
-DeleteType = UsuarioDelete
-ResponseType = UsuarioResponse
+CreateType = UserCreate
+UpdateType = UserUpdate
+DeleteType = UserDelete
+ResponseType = UserResponse
 ObjectType = User
 
 filter_fields = ["name", "email"]
@@ -84,6 +85,33 @@ class UserService:
             raise exception_404_NOT_FOUND(detail=f"Usuário com ID {id} não encontrado")
         
         return self._to_response(user)
+    
+    def user_exists(self, email: str) -> bool:
+        user = self.db.query(ObjectType).filter(
+            ObjectType.email == email,
+            ObjectType.flg_deleted == False
+        ).first()
+        
+        if not user:
+            return False
+        return True
+    
+    def get_user_by_email(self, email: str, password: str) -> ObjectType:
+        user = self.db.query(ObjectType).filter(
+            ObjectType.email == email,
+            ObjectType.flg_deleted == False
+        ).first()
+
+        # Existe usuário? 
+        if not user:
+            raise exception_404_NOT_FOUND(detail=f"Usuário com email {email} não encontrado")
+
+        # Senha correta?
+        if not verify_password(password, user.password):
+            raise exception_401_UNAUTHORIZED(detail="Senha incorreta")
+        
+        # Retorna usuário
+        return user
 
     def create(self, obj: CreateType) -> ResponseType:
         # Verificar se email já existe
@@ -106,9 +134,16 @@ class UserService:
             permissions=obj.permissions or []
         )
         
-        self.db.add(new_user)
-        self.db.commit()
-        self.db.refresh(new_user)
+        try:
+            self.db.add(new_user)
+            self.db.commit()
+            self.db.refresh(new_user)
+        except IntegrityError as e:
+            self.db.rollback()
+            # Verificar se é erro de email duplicado
+            if "email" in str(e.orig).lower() or "unique" in str(e.orig).lower():
+                raise exception_400_BAD_REQUEST(detail=f"Email {obj.email} já está em uso")
+            raise
         
         return self._to_response(new_user)
 
